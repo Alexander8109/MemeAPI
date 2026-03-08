@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// config handling
 type Config struct {
 	Port string `json:"port"`
 }
@@ -24,6 +25,7 @@ func loadConfig() (Config, error) {
 	return cfg, err
 }
 
+// Main
 func main() {
 	cfg, err := loadConfig()
 	if err != nil || cfg.Port == "" {
@@ -32,12 +34,25 @@ func main() {
 
 	router := gin.Default()
 	rand.Seed(time.Now().UnixNano())
-	router.GET("/", serveMeme)
+
+	router.GET("/random", serveRandomMeme)
+
+	router.GET("/:name", func(ctx *gin.Context) {
+		name := ctx.Param("name")
+		path := "images/" + name + ".png"
+
+		if _, err := os.Stat(path); err == nil {
+			ctx.File(path)
+			return
+		}
+		ctx.JSON(404, gin.H{"error": "Not found"})
+	})
 
 	router.Run(":" + cfg.Port)
 }
 
-func serveMeme(ctx *gin.Context) {
+// randomizer
+func serveRandomMeme(ctx *gin.Context) {
 	files, err := os.ReadDir("./images")
 	if err != nil || len(files)==0 {
 		ctx.String(500, "No memes found!")
