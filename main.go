@@ -39,7 +39,7 @@ func main() {
 
 	router.GET("/:name", func(ctx *gin.Context) {
 		name := ctx.Param("name")
-		path := "images/" + name + ".png"
+		path := "images/" + name
 
 		if _, err := os.Stat(path); err == nil {
 			ctx.File(path)
