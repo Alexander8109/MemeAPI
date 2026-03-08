@@ -4,17 +4,37 @@ import (
 	"math/rand"
 	"os"
 	"time"
+	"encoding/json"
 
 	"github.com/gin-gonic/gin"
 )
 
-func main() {
-	router := gin.Default()
+type Config struct {
+	Port string `json:"port"`
+}
 
+func loadConfig() (Config, error) {
+	data, err := os.ReadFile("config.json")
+	if err != nil {
+		return Config{}, err
+	}
+
+	var cfg Config
+	err = json.Unmarshal(data, &cfg)
+	return cfg, err
+}
+
+func main() {
+	cfg, err := loadConfig()
+	if err != nil || cfg.Port == "" {
+		cfg.Port = "8080"
+	}
+
+	router := gin.Default()
 	rand.Seed(time.Now().UnixNano())
 	router.GET("/", serveMeme)
 
-	router.Run(":25566")
+	router.Run(":" + cfg.Port)
 }
 
 func serveMeme(ctx *gin.Context) {
